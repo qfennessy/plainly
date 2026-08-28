@@ -2,7 +2,7 @@
 # plainly.sh — rewrite text in plain English using a second model via the `llm` CLI.
 #
 # Usage:  plainly.sh <mode> <input-file> [model]
-#   mode:  eli12 | colleague | manager | exec
+#   mode:  eli12 | colleague | manager | officespace | bluto
 #   model: any model `llm models` lists. Picked in this order:
 #            1. the third argument
 #            2. $PLAINLY_MODEL
@@ -21,7 +21,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_MODEL="gemini-3.7-flash"
 
 if [[ -z "$INPUT" ]]; then
-  echo "usage: plainly.sh <eli12|colleague|manager|exec> <input-file> [model]" >&2
+  echo "usage: plainly.sh <eli12|colleague|manager|officespace|bluto> <input-file> [model]" >&2
   exit 2
 fi
 if [[ ! -f "$INPUT" ]]; then
@@ -29,7 +29,7 @@ if [[ ! -f "$INPUT" ]]; then
   exit 2
 fi
 if [[ ! -f "$DIR/prompts/$MODE.md" ]]; then
-  echo "plainly: unknown mode '$MODE' (expected eli12, colleague, manager, or exec)" >&2
+  echo "plainly: unknown mode '$MODE' (expected eli12, colleague, manager, officespace, or bluto)" >&2
   exit 2
 fi
 if ! command -v llm >/dev/null 2>&1; then

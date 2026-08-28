@@ -1,6 +1,6 @@
 ---
 name: plainly
-description: Rewrite Claude's previous reply (or any pasted text) into plain, direct English by piping it through a second model (Gemini Flash by default) with the `llm` CLI, with audience modes (eli12/colleague/manager/exec) setting how simple and how short the result is. Use whenever the user types /plainly, says "eli12", asks to "say that in plain english" / "in normal english" / "like a human", asks for a simpler, shorter, manager-friendly, or executive version of a reply, or complains that a response is jargony, hypey, dramatic, listicle-ish, or over-written.
+description: Rewrite Claude's previous reply (or any pasted text) into plain, direct English by piping it through a second model (Gemini Flash by default) with the `llm` CLI, with audience modes (eli12/colleague/manager/officespace/bluto) setting how simple and how short the result is. Use whenever the user types /plainly, says "eli12", asks to "say that in plain english" / "in normal english" / "like a human", asks for a simpler, shorter, or manager-friendly version of a reply, asks for it in the voice of Bill Lumbergh / Office Space or Bluto / Animal House, or complains that a response is jargony, hypey, dramatic, listicle-ish, or over-written.
 ---
 
 # Plainly — plain-English rewrite via Gemini Flash
@@ -23,7 +23,7 @@ add puts back the voice being removed. A single label line ("Gemini's rewrite
 
 `/plainly [mode] [--model NAME] [text]` — all optional.
 
-- **mode**: if the first word is `eli12`, `colleague`, `manager`, or `exec`, that is the
+- **mode**: if the first word is `eli12`, `colleague`, `manager`, `officespace`, or `bluto`, that is the
   mode. Otherwise the mode is `eli12`.
 - **--model NAME**: pass `NAME` to the script as its third argument. Accept both
   `--model NAME` and `--model=NAME`. Strip it out before treating the rest as text.
@@ -39,7 +39,8 @@ add puts back the voice being removed. A single label line ("Gemini's rewrite
 | `eli12` (default) | A smart non-specialist on a phone | One idea per sentence, meaning before mechanism, no insider words, every number gets a verdict. Mechanism moves below a `Details:` line. |
 | `colleague` | An engineer on this code | Every fact, number, file path, and code block kept exactly. Only the theatrics go. |
 | `manager` | A technical-adjacent manager | What happened, why it matters, what's next. No code or paths. About a third the length. |
-| `exec` | An executive | Three to five sentences: outcome, impact, ask. |
+| `officespace` | A joke | Bill Lumbergh from *Office Space* delivers the same content. Facts, numbers, and paths unchanged; only the cadence differs. |
+| `bluto` | A joke | Bluto Blutarsky from *Animal House* delivers the same content, loudly. Facts, numbers, and paths unchanged. |
 
 The full rules for each mode live in `prompts/<mode>.md` next to this file, with the
 shared style and output rules in `prompts/_shared.md`. The script assembles them into
@@ -106,6 +107,12 @@ back to Gemini — the user asked for a specific model.
   user needs a copy-pasteable answer at the top, use `colleague`.
 - Long input costs latency, not correctness. There is no chunking; a very long reply
   just takes longer.
+- `officespace` and `bluto` are the two modes that override part of
+  `prompts/_shared.md`, because the shared rules ban the filler, drama, and hype those
+  voices need. Each one lists exactly which four rules it suspends, in an override
+  block at the top of its own prompt file. Facts, numbers, and identifiers stay locked
+  in both. If a joke-mode rewrite changes a number or drops a file path, that is a bug
+  in the prompt, not a style choice — report it.
 - The prompts were tuned against Gemini Flash. On a much smaller or older model, watch
   for a preamble sneaking back in (`_shared.md` forbids one) or ignored mode rules. Do
   not paper over it by editing the output; report what came back.

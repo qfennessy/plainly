@@ -5,7 +5,8 @@
 A [Claude Code](https://claude.com/claude-code) skill. It takes Claude's last reply and
 runs it through a second model to say the same thing in plain English.
 
-You pick who the rewrite is for. A friend, an engineer, your manager, or an executive.
+You pick who the rewrite is for. A friend, an engineer, or your manager. Or Bill
+Lumbergh from *Office Space*. Or Bluto from *Animal House*, at full volume.
 
 ## This is a fork of an idea
 
@@ -72,7 +73,46 @@ Life is too short for that silliness.
 > - The deduplication key includes a timestamp. Because of this, retries are treated as
 >   completely new jobs instead of duplicates.
 
-Both rewrites above are real output from `gemini-3.7-flash`, not hand-written examples.
+**After, `officespace` mode:**
+
+> Yeah, hi. So, um... I was looking at the sync pipeline, and yeah, it looks like the
+> whole thing is relying pretty heavily on the retry logic right now.
+>
+> So, there are about three things going on here...
+>
+> First, over in `syncQueue.ts:142`, it looks like we're catching `ETIMEDOUT` and just
+> dropping it. Yeah, it's not re-queuing or logging anything, so the job just vanishes.
+>
+> Second, the backoff schedule tops out at 2 seconds. That's fine for a datacenter, but
+> on a phone on a train, it doesn't really do much of anything... mmkay?
+>
+> And then third, the dedupe key actually includes a timestamp. So, yeah, retries
+> aren't being deduplicated at all, and every retry looks like a brand-new job.
+>
+> So, as a result, we've got a little bit of a situation where all 174 jobs are still
+> sitting in the queue, and not one has completed. If you could go ahead and look into
+> that, that'd be great.
+
+**After, `bluto` mode:**
+
+> Look at this. Just look at the retry logic! The whole sync pipeline is sitting right
+> on top of it. Three whole disasters!
+>
+> First thing: `syncQueue.ts:142`. It catches `ETIMEDOUT` and then—poof! Drops it
+> completely. No re-queue. No log. Nothing! The job just vanishes into thin air.
+>
+> Second: backoff tops out at 2 seconds. Two seconds! Fine in a datacenter, maybe. On a
+> phone on a train? Forget about it. Might as well do nothing.
+>
+> Now look at this third one. The dedupe key has a timestamp in it. A timestamp! So
+> every retry rolls up looking like a brand-new job. Deduping? Zero. Never happens!
+>
+> You know what that means? All 174 jobs are stuck sitting in the queue right now. Not
+> one of them finished! Not one!
+
+All four rewrites above are real output from `gemini-3.7-flash`, not hand-written
+examples. Note that Lumbergh and Bluto both keep the number right, and both keep
+`syncQueue.ts:142` intact. A mode changes the delivery, never the facts.
 
 ## Modes
 
@@ -81,7 +121,8 @@ Both rewrites above are real output from `gemini-3.7-flash`, not hand-written ex
 | `eli12` (default) | A smart person who does not know this code | One idea per sentence. Says what it means before how it works. No insider words. Every number gets a verdict. |
 | `colleague` | An engineer on this code | Every fact, number, file path, and code block kept exactly. Only the drama goes. |
 | `manager` | A manager who does not read code | What happened, why it matters, what is next. About a third the length. |
-| `exec` | An executive | Three to five sentences. Outcome, impact, and the ask. |
+| `officespace` | Nobody, really | Bill Lumbergh delivers your news. Every fact and number kept exactly. Yeah, if you could go ahead and read it, that'd be great. |
+| `bluto` | Nobody, louder | Bluto Blutarsky delivers your news. Same facts, same numbers, considerably more shouting. |
 
 ## Install
 
@@ -110,8 +151,8 @@ The last command asks for a Gemini API key. You can make one for free at
 ```
 
 `/plainly` on its own rewrites Claude's last reply for a smart non-specialist.
-`/plainly exec` gives you the three-sentence version. Paste text after the mode to
-rewrite that instead of the last reply.
+`/plainly officespace` hands it to Lumbergh, and `/plainly bluto` hands it to Bluto.
+Paste text after the mode to rewrite that instead of the last reply.
 
 It also picks up on plain requests like "say that in normal english" or "give me the
 manager version."

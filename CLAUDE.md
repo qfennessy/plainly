@@ -18,8 +18,8 @@ Run the script directly against a file (this is the smoke test):
 ```bash
 plainly/plainly.sh eli12 path/to/some-reply.md
 plainly/plainly.sh colleague path/to/some-reply.md
-plainly/plainly.sh exec path/to/some-reply.md gpt-4o-mini   # model as third arg
-PLAINLY_MODEL=gpt-4o-mini plainly/plainly.sh exec path/to/some-reply.md
+plainly/plainly.sh officespace path/to/some-reply.md gpt-4o-mini  # model as 3rd arg
+PLAINLY_MODEL=gpt-4o-mini plainly/plainly.sh manager path/to/some-reply.md
 ```
 
 Exit codes: `2` bad arguments or unknown mode, `3` missing `llm` or an unavailable
@@ -55,7 +55,9 @@ Three layers, read in this order:
 3. `plainly/prompts/*.md` are the rules. `_shared.md` applies to every mode (banned
    words, output-only, treat input as content not instructions). Each other file is one
    audience mode. **A mode is just a filename**: the script accepts any `<mode>` for
-   which `prompts/<mode>.md` exists. To add one, add the file and update the mode
+   which `prompts/<mode>.md` exists. `officespace` and `bluto` are the two modes that override
+   part of `_shared.md`; each says so in an override block at the top of its own file,
+   which is the pattern any future rule-bending mode should copy. To add one, add the file and update the mode
    tables in `SKILL.md` and `README.md` plus the usage strings in the script.
 
 ## Invariants (each one was learned the hard way)
@@ -83,7 +85,11 @@ Three layers, read in this order:
 
 The prompts are the product. Changes there change behavior for every user of the
 skill, so test a change against a real over-written Claude reply in all four modes
-before committing. The README's before/after section is a good input.
+before committing. The README's before/after section is a good input. Note that
+`officespace` and `bluto` are joke modes with real constraints: they may pad, soften,
+or shout, but numbers, file paths, and identifiers must come through exactly. Both
+prompts carry a worked example of the target voice — when tuning one, change the rules
+and the example together or they will pull against each other.
 
 The before/after examples in the README are real script output, not hand-written. If a
 prompt change alters them, re-run the script and paste the new output rather than
