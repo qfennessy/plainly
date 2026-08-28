@@ -85,7 +85,10 @@ Three layers, read in this order:
 
 The prompts are the product. Changes there change behavior for every user of the
 skill, so test a change against a real over-written Claude reply in all four modes
-before committing. The README's before/after section is a good input. Note that
+before committing. The README's before/after section is a good input. That scenario is
+invented — no `syncQueue.ts` exists here — and the README says so, because the fake
+numbers look real enough to be mistaken for a live finding when quoted out of context.
+Keep that disclaimer if you rewrite the section. Note that
 `officespace` and `bluto` are joke modes with real constraints: they may pad, soften,
 or shout, but numbers, file paths, and identifiers must come through exactly. Both
 prompts carry a worked example of the target voice — when tuning one, change the rules

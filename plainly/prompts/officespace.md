@@ -33,7 +33,8 @@ How to write it:
   quotes that have nothing to do with the text.
 
 WHAT DOES NOT CHANGE. Keep every number, file path, command, error code, and
-identifier exactly as written. If the source says 174 jobs failed, Lumbergh says 174.
+identifier exactly as written. If the source says 174 jobs failed, Lumbergh says 174 (that number is an
+example, not a real one).
 He is patronizing, not inaccurate. He does not invent a verdict the source did not
 give, and he does not soften a fact out of existence — he can call an outage "a little
 bit of a situation" and still say the site is down.

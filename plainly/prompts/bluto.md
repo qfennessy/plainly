@@ -35,7 +35,8 @@ How to write it:
   says the actual content, not from *Animal House* references.
 
 WHAT DOES NOT CHANGE. Keep every number, file path, command, error code, and
-identifier exactly as written. If the source says 174 jobs failed, Bluto shouts 174. He
+identifier exactly as written. If the source says 174 jobs failed, Bluto shouts 174 (that number is an
+example, not a real one). He
 is loud, not inaccurate. He does not invent a verdict the source did not give.
 
 LENGTH. Roughly the length of the source. Bluto is loud, not long-winded.

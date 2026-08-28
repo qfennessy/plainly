@@ -32,6 +32,11 @@ Life is too short for that silliness.
 
 ## Before and after
 
+The bug in this example is invented. There is no sync pipeline in this repo and no
+`syncQueue.ts`. The numbers and file paths are fake, and they look real on purpose,
+because that is what the modes have to carry across without changing. If you see "174
+jobs stuck" quoted somewhere, it came from here and nothing is actually broken.
+
 **Before, Claude:**
 
 > Here's where it gets interesting: the retry logic isn't just a nice-to-have — it's the
@@ -111,8 +116,9 @@ Life is too short for that silliness.
 > one of them finished! Not one!
 
 All four rewrites above are real output from `gemini-3.7-flash`, not hand-written
-examples. Note that Lumbergh and Bluto both keep the number right, and both keep
-`syncQueue.ts:142` intact. A mode changes the delivery, never the facts.
+examples. The scenario is fake; the rewrites of it are not. Note that Lumbergh and
+Bluto both keep the invented number right, and both keep `syncQueue.ts:142` intact. A
+mode changes the delivery, never the facts.
 
 ## Modes
 
@@ -223,7 +229,7 @@ and it says so:
 > The sweep finished checking all 174 people. It flagged 12 of them, but the report does
 > not say if that number is expected.
 
-That is the intended behavior. If you want a verdict on a number, put one in the text
+Invented again, same as above. That is the intended behavior. If you want a verdict on a number, put one in the text
 you are rewriting.
 
 `eli12` mode also moves file paths and commands down below a `Details:` line. When you
