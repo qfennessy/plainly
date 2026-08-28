@@ -8,7 +8,7 @@ runs it through a second model to say the same thing in plain English.
 You pick who the rewrite is for. A friend, an engineer, or your manager. Or Bill
 Lumbergh from *Office Space*. Or Bluto from *Animal House*, at full volume.
 
-## This is a fork of an idea
+## This is a fork of a good idea
 
 [Adnan Akil](https://github.com/adnanakil) wrote
 [nobuzz](https://github.com/adnanakil/nobuzz) first. The good idea is his, and it is
@@ -22,13 +22,13 @@ audience modes. Everything else here is borrowed from him. Go read his README, i
 funnier than this one.
 
 I made this for two reasons. One, to have fun with Claude. Two, to let you use any
-model you want. That is what `llm` gives you. `llm` is awesome. Check it out.
+model you want. That is what `llm` gives you. `llm` is awesome. Check it out. Three, to avoid doing more important work.
 
 ## The problem
 
 Claude blathers like a fool on drugs, sometimes. Makes me crazy I tell you.
 I get insecure when i cannot understand what my coding agent tells me. 
-Life is too short for that silliness.
+Life is too short for that silliness. Not to knock silliness.
 
 ## Before and after
 
@@ -80,45 +80,11 @@ jobs stuck" quoted somewhere, it came from here and nothing is actually broken.
 
 **After, `officespace` mode:**
 
-> Yeah, hi. So, um... I was looking at the sync pipeline, and yeah, it looks like the
-> whole thing is relying pretty heavily on the retry logic right now.
->
-> So, there are about three things going on here...
->
-> First, over in `syncQueue.ts:142`, it looks like we're catching `ETIMEDOUT` and just
-> dropping it. Yeah, it's not re-queuing or logging anything, so the job just vanishes.
->
-> Second, the backoff schedule tops out at 2 seconds. That's fine for a datacenter, but
-> on a phone on a train, it doesn't really do much of anything... mmkay?
->
-> And then third, the dedupe key actually includes a timestamp. So, yeah, retries
-> aren't being deduplicated at all, and every retry looks like a brand-new job.
->
-> So, as a result, we've got a little bit of a situation where all 174 jobs are still
-> sitting in the queue, and not one has completed. If you could go ahead and look into
-> that, that'd be great.
+If you could try it, yeah, that'd be great.
 
 **After, `bluto` mode:**
 
-> Look at this. Just look at the retry logic! The whole sync pipeline is sitting right
-> on top of it. Three whole disasters!
->
-> First thing: `syncQueue.ts:142`. It catches `ETIMEDOUT` and then—poof! Drops it
-> completely. No re-queue. No log. Nothing! The job just vanishes into thin air.
->
-> Second: backoff tops out at 2 seconds. Two seconds! Fine in a datacenter, maybe. On a
-> phone on a train? Forget about it. Might as well do nothing.
->
-> Now look at this third one. The dedupe key has a timestamp in it. A timestamp! So
-> every retry rolls up looking like a brand-new job. Deduping? Zero. Never happens!
->
-> You know what that means? All 174 jobs are stuck sitting in the queue right now. Not
-> one of them finished! Not one!
-
-All four rewrites above are real output from `gemini-3.7-flash`, not hand-written
-examples. The scenario is fake; the rewrites of it are not. Note that Lumbergh and
-Bluto both keep the invented number right, and both keep `syncQueue.ts:142` intact. A
-mode changes the delivery, never the facts.
+My advice to you is to try it. Or join the Peace Corps.
 
 ## Modes
 
