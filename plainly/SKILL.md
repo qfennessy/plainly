@@ -91,11 +91,17 @@ The script picks the model in this order, first hit wins:
 4. a per-mode default: `gemini-3.5-flash-lite` for `officespace` and `bluto`,
    `gemini-3.5-flash` for everything else
 
-Speed is the reason for the split. Measured on the same input: `gemini-3.7-flash` took
-anywhere from 3 to 32 seconds, `gemini-3.5-flash` about 5, and `gemini-3.5-flash-lite`
-under 2. Flash-lite is not used for the serious modes because it drops `eli12`'s
-"every number gets a verdict" rule — it reported "the source does not say" about text
-that did say. The joke modes need energy rather than judgment, so it is safe there.
+Speed is the reason for the split. Ten runs of `eli12` on the same input:
+`gemini-3.5-flash` had a median of 4.6s and a p90 of 5.3s, `gemini-3.7-flash` a median
+of 3.4s and a p90 of 8.1s, and `gemini-3.5-flash-lite` a median of 1.5s. The default is
+`gemini-3.5-flash` for its steadiness rather than its median — 3.7-flash is usually a
+second quicker and then occasionally three times slower, and it spent one morning
+taking thirty seconds a run with "high demand" errors.
+
+Flash-lite is not used for the serious modes because it drops `eli12`'s "every number
+gets a verdict" rule — it reported "the source does not say" about text that did say.
+The joke modes need energy rather than judgment, so it is safe there, and it is a real
+win: `bluto` takes about 1.5s on flash-lite against about 6s on `gemini-3.5-flash`.
 
 Note that setting the `plainly` alias overrides the per-mode split, so the joke modes
 lose their speed advantage. That is the right precedence — an explicit choice wins —

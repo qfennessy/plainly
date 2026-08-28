@@ -5,8 +5,9 @@
 A [Claude Code](https://claude.com/claude-code) skill. It takes Claude's last reply and
 runs it through a second model to say the same thing in plain English.
 
-You pick who the rewrite is for. A friend, an engineer, or your manager. Or Bill
-Lumbergh from *Office Space*. Or Bluto from *Animal House*, at full volume.
+You pick who the rewrite is for. A friend, an engineer, or your manager. 
+Or if you are bored, invoke Bill Lumbergh from *Office Space*. 
+Or Bluto from *Animal House*, at full volume.
 
 ## This is a fork of a good idea
 
@@ -32,10 +33,7 @@ Life is too short for that silliness. Not to knock silliness.
 
 ## Before and after
 
-The bug in this example is invented. There is no sync pipeline in this repo and no
-`syncQueue.ts`. The numbers and file paths are fake, and they look real on purpose,
-because that is what the modes have to carry across without changing. If you see "174
-jobs stuck" quoted somewhere, it came from here and nothing is actually broken.
+Pure example below.
 
 **Before, Claude:**
 
@@ -133,23 +131,36 @@ manager version."
 
 Any model in `llm models` works. Run that command to see what you have.
 
-Out of the box, the four serious modes use `gemini-3.5-flash` and the two joke modes
-use the smaller `gemini-3.5-flash-lite`. That split is about speed. Timed on the same
-input, three runs each:
+Out of the box, the three serious modes use `gemini-3.5-flash` and the two joke modes
+use the smaller `gemini-3.5-flash-lite`. Both choices are about speed, but for
+different reasons.
 
-| Model | Times | Used for |
-|---|---|---|
-| `gemini-3.7-flash` | 2.8s, 28.8s, 32.3s | nothing now, it was the old default |
-| `gemini-3.5-flash` | 5.3s, 5.4s, 3.9s | `eli12`, `colleague`, `manager` |
-| `gemini-3.5-flash-lite` | 2.0s, 4.6s, 1.9s | `officespace`, `bluto` |
+Ten runs of `eli12` on the same input:
 
-The old default was not just slow, it was unpredictable. Three seconds one run and
-thirty-two the next, for identical work.
+| Model | Median | p90 | Slowest |
+|---|---|---|---|
+| `gemini-3.5-flash` | 4.6s | 5.3s | 5.4s |
+| `gemini-3.7-flash` | 3.4s | 8.1s | 9.7s |
+| `gemini-3.5-flash-lite` | 1.5s | 4.8s | 7.1s |
 
-Flash-lite is the fastest but it does not do the serious modes well. Given text that
+`gemini-3.5-flash` is the default because it is steady, not because it is quickest. Its
+slowest run is barely slower than its typical one. `gemini-3.7-flash` usually beats it
+by about a second, then occasionally takes three times as long. Earlier the same day
+these numbers were measured, 3.7-flash was taking thirty seconds a run and returning
+"high demand" errors. If you would rather have the faster typical case and can live
+with the odd long wait, switch to it — see the alias below.
+
+Flash-lite is the fastest of the three, and the joke modes use it because it is a
+four-times win there: `bluto` runs in about 1.5s on flash-lite and about 6s on
+`gemini-3.5-flash`. It does not get the serious modes right, though. Given text that
 plainly said not one job had finished, it wrote "the source does not say whether this
-count is good or bad". That is `eli12`'s verdict rule failing. Lumbergh and Bluto need
-volume rather than judgment, so it is fine for them.
+count is good or bad". That is `eli12`'s verdict rule failing on text that did give a
+verdict. Lumbergh and Bluto need volume rather than judgment, so it is safe for them
+and nowhere else.
+
+The script itself adds about 35ms, measured with the network taken out of the picture.
+Starting `llm` costs another 430ms and there is no avoiding it. Everything else you
+wait for is the model.
 
 **Set one and forget it.** Make an `llm` alias named `plainly`:
 

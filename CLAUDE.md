@@ -84,10 +84,12 @@ Three layers, read in this order:
 - **Text goes on stdin, rules go in `-s`.** Never inline the source text into the
   prompt or the shell command. This is both the quoting fix and the prompt-injection fix.
 - **Nothing runs before the request.** The script used to call `llm aliases list` and
-  `llm models` up front. Each spawn costs ~0.45s, which was invisible against a
-  30-second request and is a quarter of the wait against a 2-second one. The alias is
-  now read straight from `aliases.json`, and the availability check runs only after a
-  failure, to explain it. Do not add a pre-flight check back.
+  `llm models` up front, at ~0.45s per spawn. The alias is now read straight from
+  `aliases.json`, and the availability check runs only after a failure, to explain it.
+  Measured with a stub `llm` on PATH so no network is involved, the script's own cost
+  is ~35ms; starting the real `llm` adds ~430ms that nothing can avoid. Do not add a
+  pre-flight check back, and measure this way rather than by diffing two network runs
+  — request variance is far larger than the thing being measured.
 
 - **Model check captures `llm models` then string-matches.** Do not change it to
   `llm models | grep -q`: `grep -q` closes the pipe early, `llm` gets SIGPIPE, and
