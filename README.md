@@ -1,7 +1,9 @@
 # Plainly
 
+*Created 2026-08-27. Last updated 2026-08-28.*
+
 A [Claude Code](https://claude.com/claude-code) skill. It takes Claude's last reply and
-runs it through Gemini Flash to say the same thing in plain English.
+runs it through a second model to say the same thing in plain English.
 
 You pick who the rewrite is for. A friend, an engineer, your manager, or an executive.
 
@@ -11,19 +13,21 @@ You pick who the rewrite is for. A friend, an engineer, your manager, or an exec
 [nobuzz](https://github.com/adnanakil/nobuzz) first. The good idea is his, and it is
 this: Claude cannot edit its own voice out of its own writing, so stop asking it to.
 Hand the text to a different model instead, and print what comes back without touching
-it. That second part is the whole trick. If Claude "tidies up" the translation, the
-voice comes straight back.
+it. 
 
-His version pipes through Google's Antigravity CLI. This one pipes through
-[Simon Willison's `llm`](https://llm.datasette.io) and `gemini-3.7-flash`, and it has
-different audience modes. Everything else here is borrowed from him. Go read his
-README, it is funnier than this one.
+The original version from Adnan pipes through Google's Antigravity CLI. This one pipes
+through [Simon Willison's `llm`](https://llm.datasette.io), and it has different
+audience modes. Everything else here is borrowed from him. Go read his README, it is
+funnier than this one.
+
+I made this for two reasons. One, to have fun with Claude. Two, to let you use any
+model you want. That is what `llm` gives you. `llm` is awesome. Check it out.
 
 ## The problem
 
-Claude is a good engineer with one bad habit. It writes like it is presenting your bug
-at a conference. Nothing is ever just broken. There is always a build-up, always three
-numbered points, and the third one is always the most interesting.
+Claude blathers like a fool on drugs, sometimes. Makes me crazy I tell you.
+I get insecure when i cannot understand what my coding agent tells me. 
+Life is too short for that silliness.
 
 ## Before and after
 
@@ -31,31 +35,44 @@ numbered points, and the third one is always the most interesting.
 
 > Here's where it gets interesting: the retry logic isn't just a nice-to-have — it's the
 > load-bearing assumption of the entire sync pipeline. Three things jumped out at me, and
-> the third one is the most instructive yet. [...] And third — and this is the kicker —
-> the dedupe key includes a timestamp, which means retries are never actually deduplicated.
+> the third one is the most instructive yet.
+>
+> First, `syncQueue.ts:142` catches `ETIMEDOUT` and just... drops it. No re-queue, no
+> log, nothing. The job silently vanishes.
+>
+> Second, the backoff schedule tops out at 2 seconds. In a datacenter that's fine. On a
+> phone on a train, it's practically a no-op.
+>
+> And third — and this is the kicker — the dedupe key includes a timestamp, which means
+> retries are never actually deduplicated. Every retry looks like a brand-new job.
+>
+> The net effect? All 174 jobs are still sitting in the queue. Not one has completed.
 
 **After, `colleague` mode:**
 
-> The sync pipeline depends on the retry logic. There are three issues with this
-> implementation:
+> All 174 jobs are still in the queue, and none have completed. The sync pipeline relies
+> on the retry logic, which has three issues:
 >
-> 1. `syncQueue.ts:142` swallows `ETIMEDOUT` instead of re-queuing the job.
-> 2. The backoff caps at 2 seconds, which is too low for mobile networks.
-> 3. The dedupe key includes a timestamp, so retries are never deduplicated.
->
-> All 174 jobs are still in the queue.
+> 1. `syncQueue.ts:142` catches `ETIMEDOUT` without re-queuing or logging. The job is
+>    dropped.
+> 2. The backoff schedule caps at 2 seconds, which is too short for mobile connections.
+> 3. The dedupe key includes a timestamp, so retries are never deduplicated. Each retry
+>    is treated as a new job.
 
 **After, `eli12` mode:**
 
-> The sync system is broken because its retry logic has three major flaws. All 174 jobs
-> are currently stuck in the queue, which means none of them finished.
+> The sync process is failing, and none of the 174 jobs have finished. This means the
+> entire queue is stuck.
 >
 > Details:
-> - `syncQueue.ts:142` ignores `ETIMEDOUT` errors instead of putting the job back in line.
-> - The wait time between retries stops growing after 2 seconds, which is too short for
->   mobile networks.
-> - The system uses a timestamp to check for duplicate jobs. Because the timestamp changes
->   on each attempt, it never recognizes retries as duplicates.
+> - In `syncQueue.ts:142`, the code catches `ETIMEDOUT` errors and drops them without
+>   logging or retrying.
+> - The retry wait time stops increasing after 2 seconds, which is too short for mobile
+>   connections.
+> - The deduplication key includes a timestamp. Because of this, retries are treated as
+>   completely new jobs instead of duplicates.
+
+Both rewrites above are real output from `gemini-3.7-flash`, not hand-written examples.
 
 ## Modes
 
@@ -74,7 +91,8 @@ mkdir -p ~/.claude/skills
 cp -r plainly/plainly ~/.claude/skills/
 ```
 
-Then set up the model:
+Then set up a model. Gemini Flash is the default because it is fast and cheap, but any
+model `llm` can reach will work. See [Pick your model](#pick-your-model).
 
 ```bash
 brew install llm
@@ -98,11 +116,47 @@ rewrite that instead of the last reply.
 It also picks up on plain requests like "say that in normal english" or "give me the
 manager version."
 
+## Pick your model
+
+Any model in `llm models` works. Run that command to see what you have.
+
+**Set one and forget it.** Make an `llm` alias named `plainly`:
+
+```bash
+llm install llm-anthropic
+llm keys set anthropic
+llm aliases set plainly claude-haiku-4-5
+```
+
+Every rewrite now uses that model. Your other `llm` commands are untouched, because
+this is a named alias and not your global default.
+
+**Change it for one rewrite.** Add `--model` to the command:
+
+```
+/plainly colleague --model gpt-4o-mini
+```
+
+**Run the script yourself.** The model is the third argument, and `PLAINLY_MODEL`
+also works:
+
+```bash
+~/.claude/skills/plainly/plainly.sh eli12 draft.md gpt-4o-mini
+PLAINLY_MODEL=gpt-4o-mini ~/.claude/skills/plainly/plainly.sh eli12 draft.md
+```
+
+When more than one of these is set, the order is: the argument, then `PLAINLY_MODEL`,
+then the `plainly` alias, then `gemini-3.7-flash`.
+
+One warning. The prompts in `prompts/` were tuned against Gemini Flash. A smaller or
+much older model may ignore some rules, and a chatty one may add a preamble even
+though `_shared.md` forbids it. Try your model on a real reply before you trust it.
+
 ## How it works
 
-Claude writes its last reply to a file. A shell script pipes that file into
-`llm -m gemini-3.7-flash`, with the style rules passed in separately as a system
-prompt. Claude then prints what comes back, word for word.
+Claude writes its last reply to a file. A shell script pipes that file into `llm`, with
+the style rules passed in separately as a system prompt. Claude then prints what comes
+back, word for word.
 
 Two details in that script are doing real work.
 
@@ -140,20 +194,15 @@ The rules for each mode are plain markdown in
 [`plainly/prompts/`](plainly/prompts/). Edit them. `_shared.md` holds the rules every
 mode uses, including the list of banned words. The rest are one file per mode.
 
-To use a different model, set `PLAINLY_MODEL`:
-
-```bash
-PLAINLY_MODEL=gemini-3.5-flash ~/.claude/skills/plainly/plainly.sh eli12 draft.md
-```
-
 ## Requirements
 
 - Claude Code
-- [`llm`](https://llm.datasette.io) with the `llm-gemini` plugin
-- A Gemini API key
+- [`llm`](https://llm.datasette.io), plus a plugin and an API key for whichever model
+  you pick. The default is `gemini-3.7-flash`, which needs `llm-gemini` and a free
+  Gemini API key.
 
 ## License
 
 MIT. Same as [nobuzz](https://github.com/adnanakil/nobuzz), which came first.
 
-Built with Claude Code (model: Opus 5).
+Built with Claude Code (model: Opus 5, because Fable, so expensive).

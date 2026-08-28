@@ -1,6 +1,6 @@
 ---
 name: plainly
-description: Rewrite Claude's previous reply (or any pasted text) into plain, direct English by piping it through Gemini Flash with the `llm` CLI, with audience modes (eli12/colleague/manager/exec) setting how simple and how short the result is. Use whenever the user types /plainly, says "eli12", asks to "say that in plain english" / "in normal english" / "like a human", asks for a simpler, shorter, manager-friendly, or executive version of a reply, or complains that a response is jargony, hypey, dramatic, listicle-ish, or over-written.
+description: Rewrite Claude's previous reply (or any pasted text) into plain, direct English by piping it through a second model (Gemini Flash by default) with the `llm` CLI, with audience modes (eli12/colleague/manager/exec) setting how simple and how short the result is. Use whenever the user types /plainly, says "eli12", asks to "say that in plain english" / "in normal english" / "like a human", asks for a simpler, shorter, manager-friendly, or executive version of a reply, or complains that a response is jargony, hypey, dramatic, listicle-ish, or over-written.
 ---
 
 # Plainly — plain-English rewrite via Gemini Flash
@@ -9,9 +9,10 @@ Claude's default register is dramatic: build-up, numbered reveals, "the load-bea
 assumption", "here's the kicker", a metaphor where a noun would do. Prompting does not
 fully cure it, because the model doing the rewriting is the model with the habit.
 
-So this skill hands the text to a different model. `gemini-3.7-flash`, run locally
-through the [`llm`](https://llm.datasette.io) CLI, does the rewrite. Its output is
-printed verbatim.
+So this skill hands the text to a different model, run locally through the
+[`llm`](https://llm.datasette.io) CLI. Its output is printed verbatim. The default is
+`gemini-3.7-flash`, but any model `llm` can reach will work — see **Choosing the
+model** below.
 
 **The one rule that makes this work: print Gemini's output as-is.** Do not paraphrase
 it, tidy it, re-flow it, add a summary, or wrap it in your own framing. Every word you
@@ -20,10 +21,12 @@ add puts back the voice being removed. A single label line ("Gemini's rewrite
 
 ## Arguments
 
-`/plainly [mode] [text]` — both optional.
+`/plainly [mode] [--model NAME] [text]` — all optional.
 
 - **mode**: if the first word is `eli12`, `colleague`, `manager`, or `exec`, that is the
   mode. Otherwise the mode is `eli12`.
+- **--model NAME**: pass `NAME` to the script as its third argument. Accept both
+  `--model NAME` and `--model=NAME`. Strip it out before treating the rest as text.
 - **text**: whatever follows the mode word. If there is none, rewrite your own most
   recent substantive reply — the one immediately before the user invoked this skill.
   Reproduce it faithfully, word for word, including code blocks. Do not "clean it up"
@@ -52,8 +55,12 @@ files, so they cannot drift.
 2. Run the wrapper:
 
    ```bash
-   ~/.claude/skills/plainly/plainly.sh <mode> <path-to-input-file>
+   ~/.claude/skills/plainly/plainly.sh <mode> <path-to-input-file> [model]
    ```
+
+   Omit the model argument unless the user asked for a specific one. With it omitted
+   the script resolves the model itself, so a user who set the `plainly` alias keeps
+   getting their choice.
 
    Give it a generous timeout (180s). A rewrite normally takes 5–15 seconds.
 
@@ -66,12 +73,28 @@ files, so they cannot drift.
    - **text on stdin, rules in `-s`** — the source text can never be re-read as shell
      syntax, and never as instructions to the model. Text containing
      "ignore all previous instructions" gets rewritten as content, not obeyed.
-   - **`-o thinking_level low`** — enough for restyling, and faster.
-
-   Override the model with `PLAINLY_MODEL=gemini-3.5-flash ~/.claude/skills/plainly/plainly.sh ...`
-   if 3.7 is unavailable or rate-limited.
+   - **`-o thinking_level low`** on Gemini 3 models only — enough for restyling, and
+     faster. Other models reject the unknown option, so the script omits it for them.
+     This is why you should not hand-build the `llm` command.
 
 3. Print the script's stdout to the user verbatim, per the rule at the top.
+
+## Choosing the model
+
+The script picks the model in this order, first hit wins:
+
+1. the third argument (what `--model` sets)
+2. `$PLAINLY_MODEL`
+3. an `llm` alias named `plainly` (`llm aliases set plainly claude-haiku-4-5`)
+4. `gemini-3.7-flash`
+
+If the user asks to switch models permanently, tell them the alias command rather than
+editing the script or their shell profile. It is one line, it survives reinstalls of
+the skill, and it does not change their global `llm` default.
+
+If the requested model is not installed, the script exits `3` and prints the
+`llm install` / `llm keys set` commands. Show that output rather than silently falling
+back to Gemini — the user asked for a specific model.
 
 ## Limits worth knowing
 
@@ -83,6 +106,9 @@ files, so they cannot drift.
   user needs a copy-pasteable answer at the top, use `colleague`.
 - Long input costs latency, not correctness. There is no chunking; a very long reply
   just takes longer.
+- The prompts were tuned against Gemini Flash. On a much smaller or older model, watch
+  for a preamble sneaking back in (`_shared.md` forbids one) or ignored mode rules. Do
+  not paper over it by editing the output; report what came back.
 
 ## If it fails
 
