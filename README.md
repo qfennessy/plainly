@@ -133,6 +133,24 @@ manager version."
 
 Any model in `llm models` works. Run that command to see what you have.
 
+Out of the box, the four serious modes use `gemini-3.5-flash` and the two joke modes
+use the smaller `gemini-3.5-flash-lite`. That split is about speed. Timed on the same
+input, three runs each:
+
+| Model | Times | Used for |
+|---|---|---|
+| `gemini-3.7-flash` | 2.8s, 28.8s, 32.3s | nothing now, it was the old default |
+| `gemini-3.5-flash` | 5.3s, 5.4s, 3.9s | `eli12`, `colleague`, `manager` |
+| `gemini-3.5-flash-lite` | 2.0s, 4.6s, 1.9s | `officespace`, `bluto` |
+
+The old default was not just slow, it was unpredictable. Three seconds one run and
+thirty-two the next, for identical work.
+
+Flash-lite is the fastest but it does not do the serious modes well. Given text that
+plainly said not one job had finished, it wrote "the source does not say whether this
+count is good or bad". That is `eli12`'s verdict rule failing. Lumbergh and Bluto need
+volume rather than judgment, so it is fine for them.
+
 **Set one and forget it.** Make an `llm` alias named `plainly`:
 
 ```bash
@@ -142,7 +160,8 @@ llm aliases set plainly claude-haiku-4-5
 ```
 
 Every rewrite now uses that model. Your other `llm` commands are untouched, because
-this is a named alias and not your global default.
+this is a named alias and not your global default. Note that an alias applies to every
+mode, so it also switches the joke modes off their faster model.
 
 **Change it for one rewrite.** Add `--model` to the command:
 
@@ -159,7 +178,7 @@ PLAINLY_MODEL=gpt-4o-mini ~/.claude/skills/plainly/plainly.sh eli12 draft.md
 ```
 
 When more than one of these is set, the order is: the argument, then `PLAINLY_MODEL`,
-then the `plainly` alias, then `gemini-3.7-flash`.
+then the `plainly` alias, then the per-mode default from the table above.
 
 One warning. The prompts in `prompts/` were tuned against Gemini Flash. A smaller or
 much older model may ignore some rules, and a chatty one may add a preamble even
@@ -211,8 +230,8 @@ mode uses, including the list of banned words. The rest are one file per mode.
 
 - Claude Code
 - [`llm`](https://llm.datasette.io), plus a plugin and an API key for whichever model
-  you pick. The default is `gemini-3.7-flash`, which needs `llm-gemini` and a free
-  Gemini API key.
+  you pick. The defaults are `gemini-3.5-flash` and `gemini-3.5-flash-lite`, which
+  both need `llm-gemini` and a free Gemini API key.
 
 ## License
 

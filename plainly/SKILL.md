@@ -11,7 +11,8 @@ fully cure it, because the model doing the rewriting is the model with the habit
 
 So this skill hands the text to a different model, run locally through the
 [`llm`](https://llm.datasette.io) CLI. Its output is printed verbatim. The default is
-`gemini-3.7-flash`, but any model `llm` can reach will work — see **Choosing the
+`gemini-3.5-flash`, and the two joke modes default to the smaller
+`gemini-3.5-flash-lite`. Any model `llm` can reach will work — see **Choosing the
 model** below.
 
 **The one rule that makes this work: print Gemini's output as-is.** Do not paraphrase
@@ -63,7 +64,7 @@ files, so they cannot drift.
    the script resolves the model itself, so a user who set the `plainly` alias keeps
    getting their choice.
 
-   Give it a generous timeout (180s). A rewrite normally takes 5–15 seconds.
+   Give it a generous timeout (180s). A rewrite normally takes 2–8 seconds.
 
    Use the script rather than calling `llm` yourself. It sets three things that are
    easy to get wrong:
@@ -87,15 +88,27 @@ The script picks the model in this order, first hit wins:
 1. the third argument (what `--model` sets)
 2. `$PLAINLY_MODEL`
 3. an `llm` alias named `plainly` (`llm aliases set plainly claude-haiku-4-5`)
-4. `gemini-3.7-flash`
+4. a per-mode default: `gemini-3.5-flash-lite` for `officespace` and `bluto`,
+   `gemini-3.5-flash` for everything else
+
+Speed is the reason for the split. Measured on the same input: `gemini-3.7-flash` took
+anywhere from 3 to 32 seconds, `gemini-3.5-flash` about 5, and `gemini-3.5-flash-lite`
+under 2. Flash-lite is not used for the serious modes because it drops `eli12`'s
+"every number gets a verdict" rule — it reported "the source does not say" about text
+that did say. The joke modes need energy rather than judgment, so it is safe there.
+
+Note that setting the `plainly` alias overrides the per-mode split, so the joke modes
+lose their speed advantage. That is the right precedence — an explicit choice wins —
+but say so if a user sets an alias and then asks why the joke modes got slower.
 
 If the user asks to switch models permanently, tell them the alias command rather than
 editing the script or their shell profile. It is one line, it survives reinstalls of
 the skill, and it does not change their global `llm` default.
 
-If the requested model is not installed, the script exits `3` and prints the
-`llm install` / `llm keys set` commands. Show that output rather than silently falling
-back to Gemini — the user asked for a specific model.
+If a run fails, the script works out why: an unavailable model exits `3` with the
+`llm install` / `llm keys set` commands, and anything else (auth, quota, rate limit,
+network) exits with the provider's own code and message. Show that output rather than
+silently falling back to another model.
 
 ## Limits worth knowing
 

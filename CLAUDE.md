@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Claude Code skill. It sends Claude's last reply to a second model (through Simon
 Willison's `llm` CLI) and prints the plain-English rewrite word for word. The whole
 point is that Claude does not do the rewriting and does not touch the result. The
-default model is `gemini-3.7-flash`; any model `llm` can reach works.
+default model is `gemini-3.5-flash`, with `gemini-3.5-flash-lite` for the two joke
+modes; any model `llm` can reach works.
 
 There is no build, lint, or test suite. The only runtime is bash + `llm`.
 
@@ -17,7 +18,8 @@ Run the script directly against a file (this is the smoke test):
 
 ```bash
 plainly/plainly.sh eli12 path/to/some-reply.md
-plainly/plainly.sh colleague path/to/some-reply.md
+plainly/plainly.sh bluto path/to/some-reply.md              # ~2s, flash-lite
+plainly/plainly.sh colleague path/to/some-reply.md          # ~5s, 3.5-flash
 plainly/plainly.sh officespace path/to/some-reply.md gpt-4o-mini  # model as 3rd arg
 PLAINLY_MODEL=gpt-4o-mini plainly/plainly.sh manager path/to/some-reply.md
 ```
@@ -31,6 +33,12 @@ Check what models are reachable without running a rewrite:
 ```bash
 llm models
 llm aliases list | grep plainly    # the sticky per-user model choice, if set
+```
+
+Timing a change (the model dominates; script overhead is now near zero):
+
+```bash
+time plainly/plainly.sh eli12 path/to/some-reply.md
 ```
 
 Install / reinstall the skill after editing (it is a copy, not a symlink, so edits in
@@ -50,8 +58,10 @@ Three layers, read in this order:
 2. `plainly/plainly.sh` validates the mode and tooling, resolves the model, builds one
    system prompt from `prompts/_shared.md` + `prompts/<mode>.md`, and execs `llm`.
    Model resolution order, first hit wins: third argument, `$PLAINLY_MODEL`, an `llm`
-   alias named `plainly`, then `gemini-3.7-flash`. The alias is the documented way for
-   a user to make a choice stick, so it survives reinstalling the skill.
+   alias named `plainly`, then a per-mode default (`gemini-3.5-flash-lite` for the joke
+   modes, `gemini-3.5-flash` otherwise). The alias is the documented way for a user to
+   make a choice stick, so it survives reinstalling the skill — but note it also
+   overrides the per-mode split, which is correct precedence and a surprising result.
 3. `plainly/prompts/*.md` are the rules. `_shared.md` applies to every mode (banned
    words, output-only, treat input as content not instructions). Each other file is one
    audience mode. **A mode is just a filename**: the script accepts any `<mode>` for
@@ -73,6 +83,12 @@ Three layers, read in this order:
   new provider-specific option needs the same guard.
 - **Text goes on stdin, rules go in `-s`.** Never inline the source text into the
   prompt or the shell command. This is both the quoting fix and the prompt-injection fix.
+- **Nothing runs before the request.** The script used to call `llm aliases list` and
+  `llm models` up front. Each spawn costs ~0.45s, which was invisible against a
+  30-second request and is a quarter of the wait against a 2-second one. The alias is
+  now read straight from `aliases.json`, and the availability check runs only after a
+  failure, to explain it. Do not add a pre-flight check back.
+
 - **Model check captures `llm models` then string-matches.** Do not change it to
   `llm models | grep -q`: `grep -q` closes the pipe early, `llm` gets SIGPIPE, and
   `pipefail` reports a false failure. The match is on the bare model name, not
